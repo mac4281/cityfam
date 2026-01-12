@@ -1,92 +1,153 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
+import ScannerOverlayView from './ScannerOverlayView';
+import { AppUser } from '@/types/user';
 
 interface QRCodeScannerViewProps {
   onScan: (code: string) => void;
   onError: (error: string) => void;
   showSuccessAnimation: boolean;
+  recentCheckedInAttendees?: AppUser[];
 }
 
 export default function QRCodeScannerView({
   onScan,
   onError,
   showSuccessAnimation,
+  recentCheckedInAttendees = [],
 }: QRCodeScannerViewProps) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const qrCodeRef = useRef<Html5Qrcode | null>(null);
+  const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const scannerIdRef = useRef(`qr-reader-${Math.random().toString(36).substr(2, 9)}`);
+  const lastScannedCode = useRef<string | null>(null);
+  const onScanRef = useRef(onScan);
+  const onErrorRef = useRef(onError);
+
+  // Keep refs updated
+  useEffect(() => {
+    onScanRef.current = onScan;
+    onErrorRef.current = onError;
+  }, [onScan, onError]);
 
   useEffect(() => {
-    // Request camera permission
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: 'environment' } })
-      .then((stream) => {
-        setHasPermission(true);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          streamRef.current = stream;
-        }
-      })
-      .catch((error) => {
-        console.error('Error accessing camera:', error);
-        setHasPermission(false);
-        onError('Camera access denied. Please enable camera permissions.');
-      });
+    const startScanning = async () => {
+      if (!scannerContainerRef.current || qrCodeRef.current) return;
 
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+      if (!scannerContainerRef.current) return;
+
+      try {
+        const html5QrCode = new Html5Qrcode(scannerIdRef.current);
+        qrCodeRef.current = html5QrCode;
+
+        // Get available cameras
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          // Try to use rear camera first, fallback to first available
+          const rearCamera = devices.find((d) => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
+          const cameraId = rearCamera?.id || devices[0].id;
+
+          await html5QrCode.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+              aspectRatio: 1.0,
+            },
+            (decodedText) => {
+              // Prevent duplicate scans of the same code
+              if (lastScannedCode.current === decodedText) {
+                return;
+              }
+              lastScannedCode.current = decodedText;
+
+              // QR code scanned successfully
+              console.log('QR Code scanned:', decodedText);
+              onScanRef.current(decodedText);
+
+              // Reset after 2 seconds to allow scanning the same code again if needed
+              setTimeout(() => {
+                lastScannedCode.current = null;
+              }, 2000);
+            },
+            (errorMessage) => {
+              // Scan error - ignore common "not found" errors
+              if (
+                !errorMessage.includes('No QR code found') &&
+                !errorMessage.includes('NotFoundException') &&
+                !errorMessage.includes('QR code parse error')
+              ) {
+                console.debug('QR scan error:', errorMessage);
+              }
+            }
+          );
+
+          setIsScanning(true);
+        } else {
+          onErrorRef.current('No camera found. Please connect a camera and try again.');
+        }
+      } catch (error: any) {
+        console.error('Error starting QR scanner:', error);
+        let errorMessage = 'Failed to start camera. Please check permissions.';
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Camera permission denied. Please enable camera permissions in your browser settings.';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No camera found. Please connect a camera and try again.';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'Camera is already in use by another application.';
+        }
+        onErrorRef.current(errorMessage);
       }
     };
-  }, []);
 
-  // Note: For actual QR code scanning, you would need to install a library like:
-  // npm install html5-qrcode
-  // This is a placeholder implementation
+    startScanning();
 
-  if (hasPermission === false) {
-    return (
-      <div className="flex items-center justify-center h-full p-4">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Camera access is required to scan QR codes.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Please enable camera permissions in your browser settings.
-          </p>
-        </div>
-      </div>
-    );
-  }
+    return () => {
+      if (qrCodeRef.current && isScanning) {
+        qrCodeRef.current
+          .stop()
+          .then(() => {
+            qrCodeRef.current?.clear();
+            qrCodeRef.current = null;
+            setIsScanning(false);
+          })
+          .catch((err) => {
+            console.error('Error stopping QR scanner:', err);
+            qrCodeRef.current = null;
+            setIsScanning(false);
+          });
+      }
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <div className="flex flex-col h-full bg-black">
-      <div className="flex-1 relative">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-cover"
+      <div className="flex-1 relative overflow-hidden">
+        {/* QR Code Scanner Container */}
+        <div
+          ref={scannerContainerRef}
+          id={scannerIdRef.current}
+          className="w-full h-full"
         />
-        {showSuccessAnimation && (
-          <div className="absolute inset-0 flex items-center justify-center bg-green-500/20">
-            <div className="bg-green-500 text-white px-6 py-3 rounded-lg text-lg font-semibold">
-              ✓ Check-in Successful!
+        {!isScanning && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-30">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white">Starting camera...</p>
             </div>
           </div>
         )}
-        {/* Scanning overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-64 border-4 border-white rounded-lg" />
-        </div>
+        {/* Scanner Overlay with success animation and recent check-ins */}
+        <ScannerOverlayView
+          showSuccessAnimation={showSuccessAnimation}
+          recentCheckedInAttendees={recentCheckedInAttendees}
+        />
       </div>
       <div className="p-4 bg-white dark:bg-gray-900">
         <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
           Point your camera at a QR code to check in
-        </p>
-        <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-2">
-          Note: QR code scanning requires html5-qrcode library to be installed
         </p>
       </div>
     </div>

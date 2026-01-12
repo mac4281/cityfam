@@ -12,6 +12,7 @@ import {
   arrayRemove,
   setDoc,
   serverTimestamp,
+  increment,
   Unsubscribe,
   onSnapshot,
 } from 'firebase/firestore';
@@ -57,8 +58,8 @@ export function useEventEdit(eventId: string | null) {
           slug: data.slug,
         };
         setEvent(eventData);
-        setStaffMembers(data.staffMembers || []);
-        setCheckedInAttendees(data.checkedInAttendees || []);
+        setStaffMembers(data.staffMembers || data.staff || []);
+        setCheckedInAttendees(data.checked_in || data.checkedInAttendees || []);
       }
     } catch (error) {
       console.error('Error loading event:', error);
@@ -149,19 +150,60 @@ export function useEventEdit(eventId: string | null) {
   };
 
   const markAttendance = async (userId: string): Promise<boolean> => {
-    if (!eventId) return false;
+    if (!eventId) {
+      setErrorMessage('Event ID is required');
+      return false;
+    }
 
     try {
+      // Verify the user is actually registered for the event
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      if (!userDoc.exists()) {
+        setErrorMessage('User not found');
+        return false;
+      }
+
+      const userData = userDoc.data();
+      const attendingEvents = (userData.attending_events as string[]) || [];
+      
+      if (!attendingEvents.includes(eventId)) {
+        setErrorMessage('User is not registered for this event');
+        return false;
+      }
+
+      // Check if already checked in
+      const eventDoc = await getDoc(doc(db, 'events', eventId));
+      if (eventDoc.exists()) {
+        const eventData = eventDoc.data();
+        const checkedIn = (eventData.checked_in as string[]) || (eventData.checkedInAttendees as string[]) || [];
+        if (checkedIn.includes(userId)) {
+          setErrorMessage('User already checked in');
+          return false;
+        }
+      }
+
+      // Add to checked_in array
       const eventRef = doc(db, 'events', eventId);
       await updateDoc(eventRef, {
-        checkedInAttendees: arrayUnion(userId),
+        checked_in: arrayUnion(userId),
       });
+
+      // Update analytics
+      const analyticsRef = doc(db, 'analytics', 'global');
+      await setDoc(
+        analyticsRef,
+        {
+          eventAttendees: increment(1),
+        },
+        { merge: true }
+      );
+
       await loadEvent();
       setErrorMessage(null);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error marking attendance:', error);
-      setErrorMessage('Failed to mark attendance');
+      setErrorMessage(error.message || 'Failed to mark attendance');
       return false;
     }
   };

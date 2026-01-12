@@ -7,6 +7,7 @@ import EventsSectionView from '@/components/EventsSectionView';
 import PostCardView from '@/components/PostCardView';
 import BranchSelectorView from '@/components/BranchSelectorView';
 import PostFormView from '@/components/PostFormView';
+import SponsorShowcase from '@/components/SponsorShowcase';
 import { useHome, SortOption } from '@/hooks/useHome';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -98,59 +99,12 @@ export default function HomePage() {
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-black">
-        {/* Header - Mobile only - Create Post Button */}
-        <div className="md:hidden flex items-center justify-end px-4 py-3 border-b border-gray-200 dark:border-gray-800">
-          <button
-            onClick={handleAddPost}
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
-            aria-label="Add post"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-          </button>
-        </div>
-
         <div className="px-4 py-6 space-y-6">
           {/* Welcome Section */}
           <div className="pt-2 text-center">
             <p className="text-xs text-gray-600 dark:text-gray-400">
               Live Local ★ Connect Global
             </p>
-          </div>
-
-          {/* Desktop Create Post Button */}
-          <div className="hidden md:flex md:justify-end">
-            <button
-              onClick={handleAddPost}
-              className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
-              aria-label="Add post"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              <span>Create Post</span>
-            </button>
           </div>
 
           {/* Sort Buttons */}
@@ -184,11 +138,36 @@ export default function HomePage() {
             selectedSort={selectedSort}
           />
 
+          {/* Sponsor Showcase */}
+          <SponsorShowcase />
+
           {/* Posts Section */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Recent Posts
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Recent Posts
+              </h2>
+              <button
+                onClick={handleAddPost}
+                className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                aria-label="Add post"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                <span className="hidden md:inline">Create Post</span>
+              </button>
+            </div>
             <div className="space-y-4">
               {isLoading ? (
                 <>

@@ -8,7 +8,6 @@ import {
   getDocs,
   QueryDocumentSnapshot,
   DocumentData,
-  or,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -29,18 +28,19 @@ export function useHome(selectedBranchId: string | null) {
   const loadLatestEvents = async () => {
     if (!selectedBranchId) return;
 
+    // Use separate queries instead of OR to avoid index requirements
+    // This matches the Swift implementation behavior without needing composite indexes
     try {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayTimestamp = Timestamp.fromDate(yesterday);
 
-      // Firestore doesn't support OR queries easily, so we'll fetch both separately
       const branchQuery = query(
         collection(db, 'events'),
         where('branchId', '==', selectedBranchId),
         where('isActive', '==', true),
         where('date', '>=', yesterdayTimestamp),
-        orderBy('date', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(20)
       );
 
@@ -49,7 +49,7 @@ export function useHome(selectedBranchId: string | null) {
         where('isGlobal', '==', true),
         where('isActive', '==', true),
         where('date', '>=', yesterdayTimestamp),
-        orderBy('date', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(20)
       );
 
@@ -76,16 +76,17 @@ export function useHome(selectedBranchId: string | null) {
         (event, index, self) => index === self.findIndex((e) => e.id === event.id)
       );
 
-      // Sort by date descending
+      // Sort by createdAt descending
       uniqueEvents.sort((a, b) => {
-        const dateA = typeof a.date === 'string' ? new Date(a.date) : a.date;
-        const dateB = typeof b.date === 'string' ? new Date(b.date) : b.date;
-        return dateB.getTime() - dateA.getTime();
+        const createdAtA = (a as any).createdAt ? ((a as any).createdAt instanceof Date ? (a as any).createdAt : (a as any).createdAt.toDate()) : new Date(0);
+        const createdAtB = (b as any).createdAt ? ((b as any).createdAt instanceof Date ? (b as any).createdAt : (b as any).createdAt.toDate()) : new Date(0);
+        return createdAtB.getTime() - createdAtA.getTime();
       });
 
       setEvents(uniqueEvents.slice(0, 20));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading latest events:', error);
+      setEvents([]);
     }
   };
 

@@ -14,6 +14,7 @@ export interface Event {
   attendeeCount?: number;
   attendees?: string[];
   slug?: string;
+  isOnline?: boolean;
   // Add other event fields as needed
 }
 

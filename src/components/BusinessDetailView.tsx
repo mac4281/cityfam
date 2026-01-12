@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -20,15 +20,7 @@ export default function BusinessDetailView({ businessId }: BusinessDetailViewPro
   const [showReviewSheet, setShowReviewSheet] = useState(false);
   const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  useEffect(() => {
-    if (business?.address) {
-      geocodeAddress(business.address);
-    } else if (business?.latitude && business?.longitude) {
-      setMapLocation({ lat: business.latitude, lng: business.longitude });
-    }
-  }, [business]);
-
-  const geocodeAddress = async (address: string) => {
+  const geocodeAddress = useCallback(async (address: string) => {
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
@@ -41,7 +33,17 @@ export default function BusinessDetailView({ businessId }: BusinessDetailViewPro
     } catch (error) {
       console.error('Geocoding error:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (business?.address) {
+      geocodeAddress(business.address);
+    } else if (business?.latitude && business?.longitude) {
+      setMapLocation({ lat: business.latitude, lng: business.longitude });
+    } else {
+      setMapLocation(null);
+    }
+  }, [business, geocodeAddress]);
 
   const openInMaps = () => {
     if (!business?.address) return;

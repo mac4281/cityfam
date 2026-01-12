@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Business, BusinessHours } from '@/types/business';
 import DayHoursView from './DayHoursView';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '@/lib/firebase';
 
@@ -255,6 +255,43 @@ export default function BusinessEditView({ business }: BusinessEditViewProps) {
       }
 
       await updateDoc(businessRef, updateData);
+
+      // Also update the corresponding supportingCompany document
+      try {
+        const supportingCompaniesRef = collection(db, 'supportingCompanies');
+        const q = query(
+          supportingCompaniesRef,
+          where('businessId', '==', business.id)
+        );
+        const supportingCompanySnapshot = await getDocs(q);
+        
+        if (!supportingCompanySnapshot.empty) {
+          const supportingCompanyRef = doc(db, 'supportingCompanies', supportingCompanySnapshot.docs[0].id);
+          const supportingCompanyUpdateData: any = {
+            name: updateData.name,
+            description: updateData.description,
+            email: updateData.email,
+            phone: updateData.phoneNumber,
+            url: updateData.website,
+            address: updateData.address,
+            imageUrl: updateData.imageUrl,
+            facebook: updateData.facebook,
+            instagram: updateData.instagram,
+            twitter: updateData.twitter,
+            linkedin: updateData.linkedin,
+          };
+          
+          // Only include imageUrl if it was updated
+          if (!updateData.imageUrl) {
+            delete supportingCompanyUpdateData.imageUrl;
+          }
+          
+          await updateDoc(supportingCompanyRef, supportingCompanyUpdateData);
+        }
+      } catch (error) {
+        console.error('Error updating supporting company:', error);
+        // Don't fail the whole update if supporting company update fails
+      }
       router.back();
     } catch (error: any) {
       console.error('Error updating business:', error);

@@ -23,8 +23,6 @@ export default function HomeBranchSelectorView({
   const [searchText, setSearchText] = useState('');
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [mapCenter, setMapCenter] = useState({ lat: 39.8283, lng: -98.5795 }); // Center of US
-  const [mapZoom, setMapZoom] = useState(4);
 
   // Filter branches based on search
   const filteredBranches = useMemo(() => {
@@ -39,25 +37,8 @@ export default function HomeBranchSelectorView({
     );
   }, [branches, searchText]);
 
-  // Center map on first branch when branches load
-  useEffect(() => {
-    if (branches.length > 0 && mapCenter.lat === 39.8283) {
-      const firstBranch = branches[0];
-      setMapCenter({
-        lat: firstBranch.latitude,
-        lng: firstBranch.longitude,
-      });
-      setMapZoom(6);
-    }
-  }, [branches]);
-
   const handleBranchSelect = (branch: Branch) => {
     setSelectedBranch(branch);
-    setMapCenter({
-      lat: branch.latitude,
-      lng: branch.longitude,
-    });
-    setMapZoom(10);
     setShowConfirmation(true);
   };
 
@@ -70,13 +51,6 @@ export default function HomeBranchSelectorView({
         router.back();
       }
     }
-  };
-
-  // Generate Google Maps embed URL
-  // Note: Google Maps Embed API doesn't support multiple markers in view mode
-  // We'll center the map on the selected/first branch location
-  const getMapUrl = () => {
-    return `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${mapCenter.lat},${mapCenter.lng}&zoom=${mapZoom}`;
   };
 
   // Handle ESC key to close
@@ -130,27 +104,6 @@ export default function HomeBranchSelectorView({
             <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Select Your Branch</h1>
           </div>
           <div className="w-20" /> {/* Spacer to balance the Close button */}
-        </div>
-
-        {/* Map View */}
-        <div className="relative flex-shrink-0" style={{ height: '35vh', minHeight: '200px' }}>
-          {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-            <iframe
-              src={getMapUrl()}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-              <p className="text-gray-500 dark:text-gray-400">
-                Map requires Google Maps API key
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Search Bar */}

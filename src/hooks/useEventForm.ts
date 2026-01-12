@@ -46,6 +46,7 @@ export function useEventForm({
   );
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date(Date.now() + 60 * 60 * 1000)); // 1 hour later
+  const [isOnline, setIsOnline] = useState(event?.isOnline || false);
   const [streetAddress, setStreetAddress] = useState(initialLocation.streetAddress);
   const [city, setCity] = useState(initialLocation.city);
   const [state, setState] = useState(initialLocation.state);
@@ -56,9 +57,11 @@ export function useEventForm({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const formattedAddress = [streetAddress, city, state, zipCode]
-    .filter((part) => part.trim() !== '')
-    .join(', ');
+  const formattedAddress = isOnline 
+    ? 'Online Event' 
+    : [streetAddress, city, state, zipCode]
+        .filter((part) => part.trim() !== '')
+        .join(', ');
 
   const formatTimeRange = (): string => {
     const formatter = new Intl.DateTimeFormat('en-US', {
@@ -72,15 +75,21 @@ export function useEventForm({
   };
 
   const isValid = (): boolean => {
-    return (
-      title.trim() !== '' &&
-      description.trim() !== '' &&
-      streetAddress.trim() !== '' &&
-      city.trim() !== '' &&
-      state.trim() !== '' &&
-      zipCode.trim() !== '' &&
-      endTime > startTime
-    );
+    const basicValid = title.trim() !== '' && description.trim() !== '' && endTime > startTime;
+    
+    if (isOnline) {
+      // For online events, link is required
+      return basicValid && link.trim() !== '';
+    } else {
+      // For physical events, location is required
+      return (
+        basicValid &&
+        streetAddress.trim() !== '' &&
+        city.trim() !== '' &&
+        state.trim() !== '' &&
+        zipCode.trim() !== ''
+      );
+    }
   };
 
   const handleImageSelect = (file: File) => {
@@ -132,6 +141,7 @@ export function useEventForm({
         attendees: [],
         eventAdmin: user?.uid || '',
         isGlobal: isPro,
+        isOnline: isOnline,
       };
 
       if (link.trim()) {
@@ -193,6 +203,8 @@ export function useEventForm({
     setStartTime,
     endTime,
     setEndTime,
+    isOnline,
+    setIsOnline,
     streetAddress,
     setStreetAddress,
     city,

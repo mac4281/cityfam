@@ -59,6 +59,7 @@ export function useEventDetail(eventId: string | null) {
           attendeeCount: data.attendeeCount || 0,
           attendees: data.attendees || [],
           slug: data.slug,
+          isOnline: data.isOnline || false,
         };
         setEvent(eventData);
 

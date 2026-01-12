@@ -195,7 +195,7 @@ export default function ContentView({ children }: ContentViewProps) {
       {/* Logo with Branch Selector - Desktop (above nav) or Mobile (at top) */}
       {!isMobile && (
         <div className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
-          <div className="max-w-[50vw] mx-auto flex items-center justify-between px-4 py-3">
+          <div className="max-w-[50vw] mx-auto flex items-center justify-between px-4 py-3 h-[57px]">
             <Logo
               size="navigation"
               currentBranchName={currentBranchName}
@@ -213,7 +213,7 @@ export default function ContentView({ children }: ContentViewProps) {
 
       {/* Desktop Navigation Bar */}
       {!isMobile && (
-        <nav className="sticky top-[73px] z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
+        <nav className="sticky top-[57px] z-40 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
           <div className="max-w-[50vw] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-center h-16">
               <div className="flex items-center space-x-1">
@@ -258,7 +258,7 @@ export default function ContentView({ children }: ContentViewProps) {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 pb-16 md:pb-0">
+      <main className="flex-1 pb-16 md:pb-0 md:pt-0">
         <div className={!isMobile ? 'max-w-[50vw] mx-auto w-full' : ''}>{children}</div>
       </main>
 

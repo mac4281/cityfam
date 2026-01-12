@@ -141,6 +141,14 @@ export default function EventEditView({ eventId }: EventEditViewProps) {
 
   const admin = isEventAdmin();
 
+  // Get recent checked-in attendees (most recent first)
+  const getRecentCheckedInAttendees = (): AppUser[] => {
+    return checkedInAttendees
+      .map((userId) => attendees.find((a) => a.id === userId))
+      .filter((attendee): attendee is AppUser => attendee !== undefined)
+      .slice(0, 10); // Limit to 10 most recent
+  };
+
   return (
     <>
       <div className="min-h-screen bg-white dark:bg-black">
@@ -522,6 +530,7 @@ export default function EventEditView({ eventId }: EventEditViewProps) {
                 setShowingScannerAlert(true);
               }}
               showSuccessAnimation={showSuccessAnimation}
+              recentCheckedInAttendees={getRecentCheckedInAttendees()}
             />
           </div>
         </div>

@@ -21,7 +21,8 @@ export default function JobRowView({
 }: JobRowViewProps) {
   const [showSubscriptionAlert, setShowSubscriptionAlert] = useState(false);
 
-  const handleClick = () => {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isPro && onEdit) {
       onEdit(job);
     } else {
@@ -29,14 +30,21 @@ export default function JobRowView({
     }
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (window.confirm(`Are you sure you want to delete "${job.title}"?`)) {
+      onDelete();
+    }
+  };
+
   return (
     <>
-      <button
-        onClick={handleClick}
-        className="w-full text-left p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-2">
+      <div className="w-full p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+        <div className="flex items-center justify-between gap-4">
+          <div 
+            className="flex-1 flex flex-col gap-2 cursor-pointer"
+            onClick={handleEditClick}
+          >
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               {job.title}
             </h3>
@@ -47,21 +55,48 @@ export default function JobRowView({
               {job.location}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {isPro ? (
-              <svg
-                className="w-6 h-6 text-blue-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <>
+                <button
+                  onClick={handleEditClick}
+                  className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                  aria-label="Edit job"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleDeleteClick}
+                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                  aria-label="Delete job"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </button>
+              </>
             ) : (
               <svg
                 className="w-6 h-6 text-gray-400"
@@ -77,7 +112,7 @@ export default function JobRowView({
             )}
           </div>
         </div>
-      </button>
+      </div>
 
       {/* Subscription Alert */}
       {showSubscriptionAlert && (

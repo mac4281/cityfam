@@ -131,9 +131,33 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
             {/* Title and Description */}
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-4">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1">
-                  {event.title}
-                </h1>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {event.title}
+                    </h1>
+                    {event.isOnline && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 dark:bg-blue-500 text-white rounded-lg shadow-sm">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span className="text-sm font-semibold">
+                          Virtual Event
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowShareSheet(true)}
                   className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-shrink-0"
@@ -183,8 +207,8 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
                 </div>
               )}
 
-              {event.location && (
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              {event.isOnline ? (
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -195,17 +219,36 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>{event.location}</span>
+                  <span>Online Event</span>
                 </div>
+              ) : (
+                event.location && event.location !== 'Online Event' && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <span>{event.location}</span>
+                  </div>
+                )
               )}
 
               {event.time && (
@@ -258,22 +301,47 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
                     href={event.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-colors ${
+                      event.isOnline
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+                    }`}
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                      />
-                    </svg>
-                    <span>Find out more</span>
+                    {event.isOnline ? (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>Join Online Event</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                          />
+                        </svg>
+                        <span>Find out more</span>
+                      </>
+                    )}
                   </a>
                 )}
 
@@ -348,6 +416,7 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
                   organizerName={organizerName}
                   organizerImageUrl={organizerImageUrl}
                   isBusiness={isOrganizerBusiness}
+                  eventId={event.id}
                 />
               </div>
             )}
@@ -458,7 +527,9 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
       {/* Messages Modal */}
       {showingMessages && event.id && (
         <div className="fixed inset-0 z-50 bg-white dark:bg-black">
-          <GroupMessageView groupId={event.id} groupType="event" />
+          <div className="h-full w-full md:max-w-[50vw] md:mx-auto md:w-full">
+            <GroupMessageView groupId={event.id} groupType="event" />
+          </div>
         </div>
       )}
 

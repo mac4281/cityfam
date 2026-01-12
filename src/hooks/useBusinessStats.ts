@@ -38,7 +38,8 @@ export function useBusinessStats(businessId: string | null) {
 
     try {
       const monthsRef = collection(db, 'analytics', businessId, 'months');
-      const snapshot = await getDocs(query(monthsRef, orderBy('__name__', 'desc')));
+      // Get all documents and sort in memory to avoid index requirement
+      const snapshot = await getDocs(monthsRef);
 
       const months = snapshot.docs.map((doc) => doc.id).sort((a, b) => b.localeCompare(a));
       setAvailableMonths(months);
