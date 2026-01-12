@@ -205,11 +205,14 @@ export function useSearch() {
       );
 
       const snapshot = await getDocs(q);
-      let companiesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        views: doc.data().views || 0,
-      }));
+      let companiesData = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          views: data.views || 0,
+        } as SupportingCompany & { views: number };
+      });
 
       // Sort by views (ascending) - lowest first
       companiesData.sort((a, b) => a.views - b.views);

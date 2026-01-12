@@ -416,7 +416,6 @@ export default function EventDetailView({ eventId }: EventDetailViewProps) {
                   organizerName={organizerName}
                   organizerImageUrl={organizerImageUrl}
                   isBusiness={isOrganizerBusiness}
-                  eventId={event.id}
                 />
               </div>
             )}

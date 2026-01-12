@@ -6,6 +6,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  QueryDocumentSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Event } from '@/types/event';
@@ -34,9 +35,8 @@ export function useUserProfile(userId: string | null) {
       const uniqueDocs = allDocs.filter((doc, index, self) => 
         index === self.findIndex((d) => d.id === doc.id)
       );
-      const snapshot = { docs: uniqueDocs } as any;
       
-      const eventsData: Event[] = snapshot.docs.map((doc) => ({
+      const eventsData: Event[] = uniqueDocs.map((doc: QueryDocumentSnapshot) => ({
         id: doc.id,
         ...doc.data(),
         date: doc.data().date?.toDate() || new Date(),
@@ -72,8 +72,8 @@ export function useUserProfile(userId: string | null) {
 
       // Sort by date descending
       postsData.sort((a, b) => {
-        const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
-        const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
+        const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : (a.createdAt instanceof Date ? a.createdAt : new Date(0));
+        const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : (b.createdAt instanceof Date ? b.createdAt : new Date(0));
         return dateB.getTime() - dateA.getTime();
       });
 
